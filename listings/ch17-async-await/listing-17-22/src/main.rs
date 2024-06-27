@@ -1,18 +1,33 @@
+use std::{thread, time::Duration};
+
 fn main() {
-    trpl::block_on({
-        // ANCHOR: here
-        async {
-            let mut strings = vec![];
+    trpl::block_on(async {
+        // ANCHOR: slow-futures
+        let a = async {
+            println!("'a' started.");
+            slow("a", 30);
+            slow("a", 10);
+            slow("a", 20);
+            trpl::sleep(Duration::from_millis(50)).await;
+            println!("'a' finished.");
+        };
 
-            let a = trpl::read_to_string("test-data/hello.txt").await.unwrap();
-            strings.push(a.trim());
+        let b = async {
+            println!("'b' started.");
+            slow("b", 75);
+            slow("b", 10);
+            slow("b", 15);
+            slow("b", 350);
+            trpl::sleep(Duration::from_millis(50)).await;
+            println!("'b' finished.");
+        };
 
-            let b = trpl::read_to_string("test-data/world.txt").await.unwrap();
-            strings.push(b.trim());
-
-            let combined = strings.join(" ");
-            println!("{combined}");
-        }
-        // ANCHOR_END: here
+        trpl::race(a, b).await;
+        // ANCHOR_END: slow-futures
     });
+}
+
+fn slow(name: &str, ms: u64) {
+    thread::sleep(Duration::from_millis(ms));
+    println!("'{name}' ran for {ms}ms");
 }

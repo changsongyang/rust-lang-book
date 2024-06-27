@@ -1,12 +1,34 @@
+use std::time::{Duration, Instant};
+
 fn main() {
     trpl::block_on(async {
         // ANCHOR: here
-        let a = async { 1u32 };
-        let b = async { "Hello!" };
-        let c = async { true };
+        let one_ns = Duration::from_nanos(1);
+        let start = Instant::now();
+        async {
+            for _ in 1..1000 {
+                trpl::sleep(one_ns).await;
+            }
+        }
+        .await;
+        let time = Instant::now() - start;
+        println!(
+            "'sleep' version finished after {} seconds.",
+            time.as_secs_f32()
+        );
 
-        let (a_result, b_result, c_result) = trpl::join!(a, b, c);
-        println!("{a_result}, {b_result}, {c_result}");
+        let start = Instant::now();
+        async {
+            for _ in 1..1000 {
+                trpl::yield_now().await;
+            }
+        }
+        .await;
+        let time = Instant::now() - start;
+        println!(
+            "'yield' version finished after {} seconds.",
+            time.as_secs_f32()
+        );
         // ANCHOR_END: here
     });
 }

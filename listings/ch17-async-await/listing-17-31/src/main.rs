@@ -1,34 +1,16 @@
-use std::time::{Duration, Instant};
+use trpl::StreamExt;
 
 fn main() {
     trpl::block_on(async {
-        // ANCHOR: here
-        let one_ns = Duration::from_nanos(1);
-        let start = Instant::now();
-        async {
-            for _ in 1..1000 {
-                trpl::sleep(one_ns).await;
-            }
-        }
-        .await;
-        let time = Instant::now() - start;
-        println!(
-            "'sleep' version finished after {} seconds.",
-            time.as_secs_f32()
-        );
+        let values = 1..101;
+        let iter = values.map(|n| n * 2);
+        let stream = trpl::stream_from_iter(iter);
 
-        let start = Instant::now();
-        async {
-            for _ in 1..1000 {
-                trpl::yield_now().await;
-            }
+        let mut filtered =
+            stream.filter(|value| value % 3 == 0 || value % 5 == 0);
+
+        while let Some(value) = filtered.next().await {
+            println!("The value was: {value}");
         }
-        .await;
-        let time = Instant::now() - start;
-        println!(
-            "'yield' version finished after {} seconds.",
-            time.as_secs_f32()
-        );
-        // ANCHOR_END: here
     });
 }

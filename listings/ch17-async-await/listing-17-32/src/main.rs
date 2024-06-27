@@ -1,19 +1,22 @@
-use std::time::Duration;
+use trpl::{ReceiverStream, Stream, StreamExt};
 
 fn main() {
     trpl::block_on(async {
-        // ANCHOR: here
-        let slow = async {
-            trpl::sleep(Duration::from_secs(5)).await;
-            "I finished!"
-        };
+        let mut messages = get_messages();
 
-        match trpl::timeout(Duration::from_secs(2), slow).await {
-            Ok(message) => println!("Succeeded with '{message}'"),
-            Err(duration) => {
-                println!("Failed after {} seconds", duration.as_secs())
-            }
+        while let Some(message) = messages.next().await {
+            println!("{message}");
         }
-        // ANCHOR_END: here
     });
+}
+
+fn get_messages() -> impl Stream<Item = String> {
+    let (tx, rx) = trpl::channel();
+
+    let messages = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
+    for message in messages {
+        tx.send(format!("Message: '{message}'")).unwrap();
+    }
+
+    ReceiverStream::new(rx)
 }

@@ -4,18 +4,16 @@ fn main() {
     trpl::block_on(async {
         // ANCHOR: here
         let slow = async {
-            println!("'slow' started.");
             trpl::sleep(Duration::from_millis(100)).await;
-            println!("'slow' finished.");
+            "I finished!"
         };
 
-        let fast = async {
-            println!("'fast' started.");
-            trpl::sleep(Duration::from_millis(50)).await;
-            println!("'fast' finished.");
-        };
-
-        trpl::race(slow, fast).await;
+        match timeout(slow, Duration::from_millis(10)).await {
+            Ok(message) => println!("Succeeded with '{message}'"),
+            Err(duration) => {
+                println!("Failed after {} seconds", duration.as_secs())
+            }
+        }
         // ANCHOR_END: here
     });
 }
